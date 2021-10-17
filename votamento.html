@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="pt-br">
 <head>
-	<title>votamento|breder</title>
+	<title>votamento|contagem</title>
 	<meta charset="utf-8">
 	<script src="jquery-3.6.0.slim.min.js"></script>
   <script src="bootstrap-5.1.3-dist/js/bootstrap.min.js"></script>
@@ -115,7 +115,7 @@
           <h1>VOTAMENTO</h1>
         </div>
         <div class="col">
-          <button type="button" class="btn btn-primary btn-lg float-end d-flex">
+          <button type="button" class="btn btn-primary btn-lg float-end d-flex" onclick="resultados()">
             Abrir Resultados
             <span class="material-icons" style="align-self:center; padding-left: 0.5rem;">assignment</span>
           </button>
@@ -158,11 +158,8 @@
         </div>
       </div>
       <hr class="my-4"/>
-
       <div id="membersContainer" class="row g-2"></div>
-
       <div class="row g-2 sticky-bottom mt-4">
-
         <div class="col-6 group-vote">
           <div class="row w-100 g-1">
             <div class="col-2 options">
@@ -187,7 +184,6 @@
             </div>
           </div>
         </div>
-        
         <div class="col-6 group-vote">
           <div class="row w-100 g-1">
             <div class="col-10 d-grid">
@@ -212,7 +208,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
 	</div>
@@ -229,7 +224,7 @@ $(function() {
 
   $('#votesTotal').change(()=> {
     let total = parseInt($('#votesTotal').val())
-    $('#votesCount').val(Math.ceil((total+0.5)/2))
+    $('#votesCount').val(votamento.votes.electAt = Math.ceil((total+0.5)/2))
   })
 
   const autoCompleteJS = new autoComplete({
@@ -260,7 +255,10 @@ $(function() {
   autoCompleteJS.init()
   votamento.init()
 })
-
+function resultados() {
+  window.localStorage.setItem('votamento', JSON.stringify(votamento.votes))
+  window.open("./results.html");
+}
 
 var votamento = {
   init: ()=>{
@@ -276,8 +274,6 @@ var votamento = {
     $('#elegible').val(votamento.votes.members.length)
     $('#countable').val(votamento.votes.sum())
     votamento.votes.members.forEach((m,i)=> {
-      console.log(m)
-      console.log(i)
       $('#membersContainer').append(votamento.getMemberButton(m,i))
     })
     console.log("XxxxXXxxxxxXxxxXXxxxxxXxxxXXxxxxxXxxxXXxxxxx")
@@ -353,7 +349,7 @@ var votamento = {
     }, 500)
     $('#countable').val(votamento.votes.sum())
     
-    if (theM.votes >= $('#votesCount').val()) {
+    if (theM.votes >= votamento.votes.electAt) {
       container.find('.member-vote-add')
         .removeClass('btn-outline-secondary')
         .addClass('btn-success')
@@ -372,7 +368,7 @@ var votamento = {
     }, 500)
     $('#countable').val(votamento.votes.sum())
 
-    if (theM.votes < $('#votesCount').val()) {
+    if (theM.votes < votamento.votes.electAt) {
       container.find('.member-vote-add')
         .removeClass('btn-success')
         .addClass('btn-outline-secondary')
@@ -428,6 +424,7 @@ var votamento = {
     toAdd.forEach((m,i)=> $('#membersContainer').append(votamento.getMemberButton(m,index++)) )
   },
   votes: {
+    electAt: 1,
     empty: 0,
     invalid: 0,
     members: [],
