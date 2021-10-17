@@ -1,0 +1,506 @@
+<!DOCTYPE HTML>
+<html lang="pt-br">
+<head>
+	<title>votamento|breder</title>
+	<meta charset="utf-8">
+	<script src="jquery-3.6.0.slim.min.js"></script>
+  <script src="bootstrap-5.1.3-dist/js/bootstrap.min.js"></script>
+  <script src="autoComplete.js-10.2.6/autoComplete.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Icons" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+	<link rel="stylesheet" href="bootstrap-5.1.3-dist/css/bootstrap.min.css" />
+  <style>
+    :root {
+      --animate-duration: 500ms;
+    }
+    .autoComplete_wrapper ul {
+      margin-top: 0.4rem;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #0d6efd!important;
+      border-radius: 0.3rem;
+      font-size: 1.25rem;
+    }
+    .autoComplete_wrapper ul li {
+      display: block;
+      padding: 0 0.5rem;
+      border-radius: 0.3rem;
+    }
+    .autoComplete_wrapper ul li[aria-selected="true"] {
+      background-color: #0d6efd10;
+    }
+    .autoComplete_wrapper ul li:hover {
+      background-color: #0d6efd40;
+    }
+    .autoComplete_wrapper ul li mark {
+      padding: 0;
+      background-color: unset;
+      color: #0d6efd!important;
+      font-weight: bold;
+      border-radius: 0.3rem;
+    }
+
+    .group-vote {
+      display: flex;
+    }
+    .group-vote .options {
+      display: grid;
+    }
+    .group-vote .options .btn {
+      padding: 0 0.3rem;
+    }
+    .group-vote .options .btn:first-of-type {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .group-vote .options .btn:last-of-type {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    .btn-vote-opt {
+      display: inline-flex;
+      border: unset
+    }
+    .btn-vote-opt .material-icons {
+      align-self: center;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="modal fade" id="memberModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="memberModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title text-center text-danger m-0 w-100" id="memberModalLabel">
+            Remover Candidato do Votamento
+          </h4>
+        </div>
+        <div class="modal-body">
+          <h5 id="member-to-remove" class="text-center my-4"></h5>
+        </div>
+        <div class="modal-footer d-block">
+          <div class="row">
+            <div class="col d-grid">
+              <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">
+                <strong>Cancelar</strong>
+              </button>
+            </div>
+            <div class="col d-grid">
+              <button type="button" class="btn btn-danger" onclick="votamento.memberDelConfirm()">
+                <strong>Remover</strong>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+	<div class="container pt-4">
+    <div class="alert alert-primary alert-dismissible animate__animated animate__fadeIn" role="alert">
+      <h4 class="alert-heading">LEIA-ME</h4>
+      <hr/>
+      <p class="m-0"><b>1. Total de Votos</b></p>
+      configure o "Total de Votos" da eleição para que eu possa calcular os eleitos ("metade mais um") de forma automática
+      <p class="m-0"><b>2. Pesquisando de membros</b></p>
+      digite o nome do membro para adicionar na lista de votos (utilize o auto-completar)
+      <p class="m-0"><b>3. Eleições</b></p>
+      clique no botão com o nome do membro para adicionar votos
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class=" animate__animated animate__fadeIn animate__delay-1s">
+      <div class="row">
+        <div class="col">
+          <h1>VOTAMENTO</h1>
+        </div>
+        <div class="col">
+          <button type="button" class="btn btn-primary btn-lg float-end d-flex">
+            Abrir Resultados
+            <span class="material-icons" style="align-self:center; padding-left: 0.5rem;">assignment</span>
+          </button>
+        </div>
+        <div class="col">
+          <div class="input-group input-group-lg">
+            <span class="input-group-text" id="basic-addon1">Total de Votos</span>
+            <input id="votesTotal" type="number" class="form-control text-center" placeholder="1,2..." min="1" max="9999" value="1">
+            <input id="votesCount" type="text" class="form-control text-center bg-success bg-opacity-75 text-white border-success" value="1" disabled>
+          </div>
+        </div>
+      </div>
+      <hr/>
+      <p class="text-secondary"><strong>Nome do Membro</strong></p>
+      <input class="form-control form-control-lg border border-primary" id="autoComplete" type="text" dir="ltr" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off" maxlength="128" tabindex="1">
+      <div class="row mt-2">
+        <div class="col">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text" id="basic-addon1">Total Elegíveis</span>
+            <input id="elegible" type="text" class="form-control text-center" disabled>
+          </div>
+        </div>
+        <div class="col">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text" id="basic-addon1">Votos Contabilizados</span>
+            <input id="countable" type="text" class="form-control text-center" disabled>
+          </div>
+        </div>
+        <div class="col">
+        </div>
+        <div class="col">
+          <div class="d-grid">
+            <button type="button" class="btn btn-sm btn-outline-danger">Limpar [Esc]</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class=" d-grid">
+            <button type="button" class="btn btn-sm btn-primary">Adicionar [Ctrl+Enter]</button>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4"/>
+
+      <div id="membersContainer" class="row g-2"></div>
+
+      <div class="row g-2 sticky-bottom mt-4">
+
+        <div class="col-6 group-vote">
+          <div class="row w-100 g-1">
+            <div class="col-2 options">
+              <button type="button" class="btn btn-outline-danger btn-vote-opt animate__animated btn-remove" onclick="votamento.emptyDel()">
+                <span class="material-icons">remove_circle_outline</span>
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-vote-opt animate__animated btn-disable disabled">
+                <span class="material-icons">highlight_off</span>
+              </button>
+            </div>
+            <div class="col-10 d-grid">
+              <button class="btn btn-dark animate__animated" type="button" onclick="votamento.emptyAdd()">
+                <div class="row g-0">
+                  <div class="col-10 d-grid">
+                    <strong style="margin: auto 0; font-size: 2em;">Brancos</strong>
+                  </div>
+                  <div class="col-2 d-grid">
+                    <b id="emptySum" style="margin: auto 0; font-size: 2em;">0</b>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-6 group-vote">
+          <div class="row w-100 g-1">
+            <div class="col-10 d-grid">
+              <button class="btn btn-dark animate__animated" type="button" onclick="votamento.invalidAdd()">
+                <div class="row g-0">
+                  <div class="col-10 d-grid">
+                    <strong style="margin: auto 0; font-size: 2em;">Nulos</strong>
+                  </div>
+                  <div class="col-2 d-grid">
+                    <b id="invalidSum" style="margin: auto 0; font-size: 2em;">0</b>
+                  </div>
+                </div>
+              </button>
+            </div>
+            <div class="col-2 options">
+              <button type="button" class="btn btn-outline-danger btn-vote-opt animate__animated btn-remove" onclick="votamento.invalidDel()">
+                <span class="material-icons">remove_circle_outline</span>
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-vote-opt animate__animated btn-disable disabled">
+                <span class="material-icons">highlight_off</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+	</div>
+</body>
+<!--███████╗  ██████╗ ██████╗  ██╗ ██████╗ ████████╗-->
+<!--██╔════╝ ██╔════╝ ██╔══██╗ ██║ ██╔══██╗╚══██╔══╝-->
+<!--███████╗ ██║      ██████╔╝ ██║ ██████╔╝   ██║   -->
+<!--╚════██║ ██║      ██╔══██╗ ██║ ██╔═══╝    ██║   -->
+<!--███████║ ╚██████╗ ██║  ██║ ██║ ██║        ██║   -->
+<!--╚══════╝  ╚═════╝ ╚═╝  ╚═╝ ╚═╝ ╚═╝        ╚═╝   -->
+<script>
+var myModal = new bootstrap.Modal($('#memberModal'))
+$(function() {
+
+  $('#votesTotal').change(()=> {
+    let total = parseInt($('#votesTotal').val())
+    $('#votesCount').val(Math.ceil((total+0.5)/2))
+  })
+
+  const autoCompleteJS = new autoComplete({
+    placeHolder: "Pesquise o nome do membro",
+    data: {
+      src: members.split('\n').filter(n=>n)
+    },
+    resultItem: {
+      highlight: {
+        render: true
+      }
+    },
+    submit: true,
+    events: {
+      input: {
+        selection: (event) => {
+          const selection = event.detail.selection.value
+          autoCompleteJS.input.value = selection
+        },
+        adicionar: (event) => {
+          votamento.memberAdd(autoCompleteJS.input.value)
+          autoCompleteJS.input.value = ""
+          autoCompleteJS.close(autoCompleteJS)
+        }
+      }
+    }
+  });
+  autoCompleteJS.init()
+  votamento.init()
+})
+
+
+var votamento = {
+  init: ()=>{
+    votamento.votes.empty = 0
+    votamento.votes.invalid = 0
+    votamento.votes.members = [
+      {votes:0, member:"Anderson Felipe de Lima Breder"},
+      {votes:0, member:"Diego Sepulvida"},
+      {votes:0, member:"Maurício Fernandes dos Santos"}
+    ]
+    $('#emptySum').html(votamento.votes.empty)
+    $('#invalidSum').html(votamento.votes.invalid)
+    $('#elegible').val(votamento.votes.members.length)
+    $('#countable').val(votamento.votes.sum())
+    votamento.votes.members.forEach((m,i)=> {
+      console.log(m)
+      console.log(i)
+      $('#membersContainer').append(votamento.getMemberButton(m,i))
+    })
+    console.log("XxxxXXxxxxxXxxxXXxxxxxXxxxXXxxxxxXxxxXXxxxxx")
+  },
+  getMemberButton: (data, index)=> {
+    let a = `
+    <div class="col-10 d-grid">
+      <button class="member-vote-add btn btn-outline-secondary animate__animated" type="button" onclick="votamento.voteAdd('${data.member}')">
+        <div class="row g-0">
+          <div class="col-10 d-grid">
+            <strong style="margin: auto 0">${data.member}</strong>
+          </div>
+          <div class="col-2 d-grid">
+            <b class="member-votes" style="margin: auto 0; font-size: 2em;">${data.votes}</b>
+          </div>
+        </div>
+      </button>
+    </div>`
+    let b = `
+    <div class="col-2 options">
+      <button type="button" class="member-vote-del btn btn-outline-danger btn-vote-opt animate__animated btn-remove" onclick="votamento.voteDel('${data.member}')">
+        <span class="material-icons">remove_circle_outline</span>
+      </button>
+      <button type="button" class="member-vote-off btn btn-outline-danger btn-vote-opt animate__animated btn-disable" onclick="votamento.memberDel('${data.member}')">
+        <span class="material-icons">highlight_off</span>
+      </button>
+    </div>`
+    return `
+    <div class="col-6 group-vote animate__animated animate__zoomIn" data-member="${data.member}">
+      <div class="row w-100 g-1">${index % 2 !== 0 ? a+b : b+a}</div>
+    </div>`
+  },
+
+  memberAdd: (member)=>{
+    if (!member || member.length===0) return
+    let vm = votamento.votes.members.find(m=>m.member===member)
+    if (!vm) {
+      vm = { votes: 0, member: member }
+      votamento.votes.members.push(vm)
+      $('#membersContainer').append(votamento.getMemberButton(vm, votamento.votes.members.length+1))
+    } else {
+      console.log("NÃO FIZ")
+    }
+    $('#elegible').val(votamento.votes.members.length)
+    $('#countable').val(votamento.votes.sum)
+  },
+  memberDel: (member)=>{
+    $('#member-to-remove').html(member)
+    myModal.show()
+  },
+  memberDelConfirm:() =>{
+    let member = votamento.votes.members.find(m=>m.member===$('#member-to-remove').text()).member
+    let containers = $(`.group-vote[data-member]`)
+    let index = containers.index($(`.group-vote[data-member="${member}"]`))
+    containers = containers.slice(index)
+    containers.each((i,e) => {
+      $(e).find('button').addClass('disabled').prop('disabled',true)
+      // $(e).addClass('animate__zoomOut')
+      $(e).remove()
+    });
+    myModal.hide()
+    votamento.votes.members.splice(index,1)
+    votamento.refresh(index)
+  },
+  voteAdd: (member)=>{
+    var theM = votamento.votes.members.find(m=>m.member===member)
+    let container = $(`.group-vote[data-member="${member}"]`)
+    container.find('.member-votes').html(++theM.votes)
+    var btn = container.find('.member-vote-add')
+    btn.addClass('disabled animate__flash').prop('disabled',true)
+    setTimeout(()=> {
+      btn.removeClass('disabled animate__flash').prop('disabled',false)
+    }, 500)
+    $('#countable').val(votamento.votes.sum())
+    
+    if (theM.votes >= $('#votesCount').val()) {
+      container.find('.member-vote-add')
+        .removeClass('btn-outline-secondary')
+        .addClass('btn-success')
+    }
+  },
+  voteDel: (member)=>{
+    var theM = votamento.votes.members.find(m=>m.member===member)
+    if(--theM.votes < 0)
+    theM.votes = 0
+    let container = $(`.group-vote[data-member="${member}"]`)
+    container.find('.member-votes').html(theM.votes)
+    var btn = container.find('.member-vote-del')
+    btn.addClass('disabled animate__flash').prop('disabled',true)
+    setTimeout(()=> {
+      btn.removeClass('disabled animate__flash').prop('disabled',false)
+    }, 500)
+    $('#countable').val(votamento.votes.sum())
+
+    if (theM.votes < $('#votesCount').val()) {
+      container.find('.member-vote-add')
+        .removeClass('btn-success')
+        .addClass('btn-outline-secondary')
+    }
+  },
+  emptyAdd: ()=>{
+    $('#emptySum').html(++votamento.votes.empty)
+    var btn = $('#emptySum').parents('button')
+    btn.addClass('disabled animate__flash').prop('disabled',true)
+    setTimeout(()=> {
+      btn.removeClass('disabled animate__flash').prop('disabled',false)
+    }, 500)
+    $('#countable').val(votamento.votes.sum())
+  },
+  emptyDel: ()=>{
+    if(--votamento.votes.empty < 0)
+      votamento.votes.empty = 0
+    $('#emptySum').html(votamento.votes.empty)
+    var btn = $('#emptySum').parents('.group-vote').find('.btn-remove')
+    btn.addClass('disabled animate__flash').prop('disabled',true)
+    setTimeout(()=> {
+      btn.removeClass('disabled animate__flash').prop('disabled',false)
+    }, 500)
+    $('#countable').val(votamento.votes.sum())
+  },
+  invalidAdd: ()=>{
+    $('#invalidSum').html(++votamento.votes.invalid)
+    var btn = $('#invalidSum').parents('button')
+    btn.addClass('disabled animate__flash').prop('disabled',true)
+    setTimeout(()=> {
+      btn.removeClass('disabled animate__flash').prop('disabled',false)
+    }, 500)
+    $('#countable').val(votamento.votes.sum())
+  },
+  invalidDel: ()=>{
+    if(--votamento.votes.invalid < 0)
+      votamento.votes.invalid = 0
+    $('#invalidSum').html(votamento.votes.invalid)
+    var btn = $('#invalidSum').parents('.group-vote').find('.btn-remove')
+    btn.addClass('disabled animate__flash').prop('disabled',true)
+    setTimeout(()=> {
+      btn.removeClass('disabled animate__flash').prop('disabled',false)
+    }, 500)
+    $('#countable').val(votamento.votes.sum())
+  },
+  refresh: (removeOnIndex)=>{
+    $('#emptySum').html(votamento.votes.empty)
+    $('#invalidSum').html(votamento.votes.invalid)
+    $('#elegible').val(votamento.votes.members.length)
+    $('#countable').val(votamento.votes.sum())
+    var toAdd = votamento.votes.members.slice(removeOnIndex)
+    let index = removeOnIndex % 2
+    toAdd.forEach((m,i)=> $('#membersContainer').append(votamento.getMemberButton(m,index++)) )
+  },
+  votes: {
+    empty: 0,
+    invalid: 0,
+    members: [],
+    sum:()=> {
+      let gambis = 0
+      votamento.votes.members.forEach(v=>gambis+=v.votes)
+      return votamento.votes.empty + votamento.votes.invalid + gambis 
+    }
+  }
+}
+var members = `
+Adalvo Pereira da Silva
+Adriana Correa Kobb
+Ana Carolina Felix Bispo
+Ana Pereira de Souza
+Anderson Felipe de Lima Breder
+Andresa Aparecida Felix Bispo
+Aparecida Rocha Lima Correa
+Carlos Alexandre Ferreira da Silva
+Carlos Cesar Pinto de Oliveira
+Charles Santos Sobral
+Christopher Araujo Bastos da Silva
+Clivielly da Silva Fernandes dos Santos
+Cristiane Silva Santiago
+Diego Sepulvida
+Eliane Amorim Ferreira
+Elisa Oliveira Costa
+Elizete Pereira de Souza Silva
+Eziel Alves de Freitas
+Fabiana Nonato Inácio Bispo
+Francisco Paulino Sobral
+Givanildo Bernardo dos Santos
+Helen Pereira de Souza Sepulvida
+Isabela Martins di Santi
+João Roberto Correa
+José Antônio Felix
+José Carlos Martins
+José Francisco Bispo
+José Sepulvida
+Leandro Santos Zacarioto
+Luciana Soares de Oliveira Bernardo
+Luis Henrique di Santi Martins
+Lunisklovks de Gaule Bispo
+Maria Amélia Dias Felix
+Maria Aparecida de Jesus da Silva
+Maria Aparecida Santos
+Maria Batista Correia Amaral
+Maria das Dores Ribeiro Nunes
+Maria Lopes Nogueira da Silva
+Maria Rosa Ferreira da Silva
+Maria Zenilda de Lima Breder Martins
+Marlene de Almeida Sobral
+Maurício Fernandes dos Santos
+Maurício Ferreira da Costa
+Miriam Aparecida de Oliveira Costa
+Paulo Bernardo Ferreira
+Paulo Roberto José dos Santos Junior
+Pérola Vitória Ferreira Zacarioto
+Quele Ferreira Zacarioto
+Rosalina Rodrigues Sepulvida
+Rusinéia Soares de Souza Padun
+Salmo Henrique da Silva
+Santa Maria de Lima
+Silvia Helena di Santi Martins
+Silvania Maria de Jesus Oliveira
+Tereza Jesus Sobral Santos
+Tereza Marinho da Silva
+Thiago de Lima Breder
+Vinícius dos Santos Sobral
+Welington Ferreira da Silva
+Zenaide Costa de Oliveira Rodrigues
+Zilene Soares Ferreira
+Zulmira dos Santos Oliveira
+`
+</script>
+</html>
